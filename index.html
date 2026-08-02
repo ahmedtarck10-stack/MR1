@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MR1 - AR/VR/MR Experience</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/DRACOLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
     <style>
         * {
             margin: 0;
@@ -29,12 +32,14 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 25px;
+            border-radius: 15px;
             border: 2px solid #667eea;
-            max-width: 400px;
+            max-width: 420px;
             z-index: 100;
+            max-height: 85vh;
+            overflow-y: auto;
         }
 
         .ui-panel h1 {
@@ -47,6 +52,69 @@
             color: #aaa;
             margin-bottom: 15px;
             line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #444;
+        }
+
+        .section h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.2);
+        }
+
+        .upload-area.active {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+
+        .file-item {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .file-item button {
+            padding: 4px 8px;
+            font-size: 0.8em;
+            background: #ff6b6b;
         }
 
         .controls {
@@ -64,6 +132,7 @@
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s ease;
+            font-size: 0.9em;
         }
 
         button:hover {
@@ -71,53 +140,74 @@
             transform: scale(1.05);
         }
 
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
         button.active {
             background: #764ba2;
+        }
+
+        .status {
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+
+        .status.loading {
+            color: #667eea;
+        }
+
+        .status.success {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+        }
+
+        .status.error {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
         }
 
         .info-bottom {
             position: absolute;
             bottom: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.9);
             padding: 15px;
             border-radius: 10px;
             border: 2px solid #667eea;
-            font-size: 0.9em;
+            font-size: 0.85em;
             color: #aaa;
-            max-width: 400px;
+            max-width: 420px;
         }
 
         .info-bottom p {
             margin: 5px 0;
         }
 
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 30px;
-            border-radius: 10px;
-            border: 2px solid #667eea;
-            text-align: center;
-            z-index: 50;
+        .info-bottom strong {
+            color: #667eea;
         }
 
-        .loading h2 {
-            color: #667eea;
-            margin-bottom: 10px;
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 10px;
         }
 
         .spinner {
-            border: 4px solid #667eea;
-            border-top: 4px solid #764ba2;
+            border: 3px solid #667eea;
+            border-top: 3px solid #764ba2;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 25px;
+            height: 25px;
             animation: spin 1s linear infinite;
-            margin: 20px auto;
+            margin: 0 auto;
         }
 
         @keyframes spin {
@@ -127,9 +217,9 @@
 
         @media (max-width: 768px) {
             .ui-panel {
-                max-width: 90vw;
-                font-size: 0.9em;
+                max-width: 95vw;
                 padding: 15px;
+                font-size: 0.9em;
             }
 
             .controls {
@@ -138,47 +228,74 @@
 
             button {
                 padding: 8px 12px;
-                font-size: 0.9em;
+            }
+
+            .info-bottom {
+                max-width: 95vw;
+                font-size: 0.8em;
             }
         }
     </style>
 </head>
 <body>
-    <div class="loading" id="loading">
-        <h2>🚀 MR1 Initializing</h2>
-        <div class="spinner"></div>
-        <p>Loading 3D Scene...</p>
-    </div>
-
     <div class="ui-panel">
         <h1>🎯 MR1</h1>
         <p>Interactive 3D AR/VR/MR Experience</p>
-        <div class="controls">
-            <button onclick="changeShape('cube')">Cube</button>
-            <button onclick="changeShape('sphere')">Sphere</button>
-            <button onclick="changeShape('cone')">Cone</button>
-            <button onclick="changeShape('torus')">Torus</button>
-            <button onclick="toggleRotation()">▶ Rotate</button>
-            <button onclick="changeColor()">🎨 Color</button>
-            <button onclick="toggleLight()">💡 Light</button>
-            <button onclick="resetScene()">↺ Reset</button>
+
+        <div class="section">
+            <h3>📁 Upload 3D Model</h3>
+            <div class="upload-area" id="uploadArea">
+                <p>📤 Drag & Drop or Click to Upload</p>
+                <p style="font-size: 0.85em; color: #999;">Supported: GLB, GLTF, USDZ (Max 50MB)</p>
+            </div>
+            <input type="file" id="fileInput" accept=".glb,.gltf,.usdz" multiple>
+            <div class="file-list" id="fileList"></div>
+            <div class="status" id="status"></div>
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>Loading model...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🎮 Controls</h3>
+            <div class="controls">
+                <button onclick="toggleRotation()">▶ Auto Rotate</button>
+                <button onclick="changeColor()">🎨 Color</button>
+                <button onclick="toggleLight()">💡 Light</button>
+                <button onclick="resetView()">↺ Reset View</button>
+                <button onclick="downloadModel()">⬇ Download</button>
+                <button onclick="clearScene()">🗑️ Clear</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>⚙️ Settings</h3>
+            <div class="controls" style="gap: 5px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="wireframe" onchange="toggleWireframe()"> Wireframe
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="shadows" checked onchange="toggleShadows()"> Shadows
+                </label>
+            </div>
         </div>
     </div>
 
     <div class="info-bottom">
-        <p><strong>Controls:</strong></p>
-        <p>🖱️ Drag to rotate camera</p>
-        <p>🔍 Scroll to zoom</p>
-        <p>⌨️ Use buttons to interact</p>
+        <p><strong>🖱️ Controls:</strong></p>
+        <p>Left Click + Drag = Rotate</p>
+        <p>Right Click + Drag = Pan</p>
+        <p>Scroll = Zoom</p>
     </div>
 
     <script>
         // Scene Setup
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x1a1a2e);
-        scene.fog = new THREE.Fog(0x1a1a2e, 100, 500);
+        scene.fog = new THREE.Fog(0x1a1a2e, 500, 2000);
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
         camera.position.z = 5;
 
         const canvas = document.createElement('canvas');
@@ -187,125 +304,195 @@
 
         const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowShadowMap;
 
+        // Orbit Controls
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 4;
+
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
         scene.add(ambientLight);
 
         const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(5, 10, 7);
+        directionalLight.position.set(10, 20, 10);
         directionalLight.castShadow = true;
         directionalLight.shadow.mapSize.width = 2048;
         directionalLight.shadow.mapSize.height = 2048;
+        directionalLight.shadow.camera.far = 100;
         scene.add(directionalLight);
 
-        const pointLight = new THREE.PointLight(0x667eea, 1);
-        pointLight.position.set(-5, 5, 5);
+        const pointLight = new THREE.PointLight(0x667eea, 1, 100);
+        pointLight.position.set(-10, 10, 10);
+        pointLight.castShadow = true;
         scene.add(pointLight);
 
-        // Create initial geometry
-        let currentShape = 'cube';
-        let mesh;
-        let isRotating = true;
-
-        function createGeometry(shape) {
-            let geometry;
-            switch(shape) {
-                case 'sphere':
-                    geometry = new THREE.SphereGeometry(2, 64, 64);
-                    break;
-                case 'cone':
-                    geometry = new THREE.ConeGeometry(2, 4, 64);
-                    break;
-                case 'torus':
-                    geometry = new THREE.TorusGeometry(2, 0.8, 64, 100);
-                    break;
-                case 'cube':
-                default:
-                    geometry = new THREE.BoxGeometry(3, 3, 3);
-            }
-            return geometry;
-        }
-
-        function createMesh() {
-            if (mesh) scene.remove(mesh);
-            
-            const geometry = createGeometry(currentShape);
-            const material = new THREE.MeshPhongMaterial({
-                color: 0x667eea,
-                shininess: 100,
-                wireframe: false
-            });
-            
-            mesh = new THREE.Mesh(geometry, material);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            scene.add(mesh);
-        }
-
-        createMesh();
-
         // Ground plane
-        const groundGeometry = new THREE.PlaneGeometry(100, 100);
+        const groundGeometry = new THREE.PlaneGeometry(200, 200);
         const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a3e });
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -5;
+        ground.position.y = -10;
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Add particles for effect
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particleCount = 500;
-        const positions = new Float32Array(particleCount * 3);
+        // Loaders
+        const gltfLoader = new THREE.GLTFLoader();
+        const dracoLoader = new THREE.DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        gltfLoader.setDRACOLoader(dracoLoader);
 
-        for (let i = 0; i < particleCount * 3; i += 3) {
-            positions[i] = (Math.random() - 0.5) * 200;
-            positions[i + 1] = (Math.random() - 0.5) * 200;
-            positions[i + 2] = (Math.random() - 0.5) * 200;
-        }
+        let loadedModels = [];
+        let isAutoRotating = true;
 
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        const particlesMaterial = new THREE.PointsMaterial({ color: 0x667eea, size: 0.1 });
-        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particles);
+        // File Upload Handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const status = document.getElementById('status');
+        const loadingSpinner = document.getElementById('loadingSpinner');
 
-        // Mouse controls
-        let isDragging = false;
-        let mouse = { x: 0, y: 0 };
+        uploadArea.addEventListener('click', () => fileInput.click());
 
-        document.addEventListener('mousedown', () => isDragging = true);
-        document.addEventListener('mouseup', () => isDragging = false);
-        document.addEventListener('mousemove', (e) => {
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('active');
         });
 
-        // Zoom control
-        window.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            camera.position.z += e.deltaY * 0.005;
-            camera.position.z = Math.max(2, Math.min(20, camera.position.z));
-        }, { passive: false });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('active');
+        });
 
-        // UI Functions
-        function changeShape(shape) {
-            currentShape = shape;
-            createMesh();
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('active');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (['glb', 'gltf', 'usdz'].some(ext => file.name.endsWith('.' + ext))) {
+                    loadModel(file);
+                } else {
+                    showStatus('Invalid file format. Use GLB, GLTF, or USDZ', 'error');
+                }
+            }
         }
 
+        function loadModel(file) {
+            const reader = new FileReader();
+            
+            reader.onload = (e) => {
+                loadingSpinner.style.display = 'block';
+                showStatus('Loading ' + file.name + '...', 'loading');
+
+                try {
+                    const url = URL.createObjectURL(new Blob([e.target.result], { type: file.type }));
+                    
+                    gltfLoader.load(url, (gltf) => {
+                        const model = gltf.scene;
+                        model.traverse((node) => {
+                            if (node.isMesh) {
+                                node.castShadow = true;
+                                node.receiveShadow = true;
+                            }
+                        });
+
+                        // Center and scale model
+                        const box = new THREE.Box3().setFromObject(model);
+                        const center = box.getCenter(new THREE.Vector3());
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const scale = 10 / maxDim;
+                        
+                        model.position.sub(center.multiplyScalar(scale));
+                        model.scale.multiplyScalar(scale);
+
+                        scene.add(model);
+                        loadedModels.push(model);
+
+                        addFileToList(file.name, model);
+                        showStatus('✓ ' + file.name + ' loaded successfully!', 'success');
+                        loadingSpinner.style.display = 'none';
+
+                        // Auto fit camera
+                        const bbox = new THREE.Box3().setFromObject(model);
+                        const center2 = bbox.getCenter(new THREE.Vector3());
+                        const distance = bbox.getSize(new THREE.Vector3()).length();
+                        camera.position.copy(center2);
+                        camera.position.z += distance;
+                        controls.target.copy(center2);
+                        controls.update();
+
+                    }, undefined, (error) => {
+                        showStatus('Error loading model: ' + error.message, 'error');
+                        loadingSpinner.style.display = 'none';
+                    });
+                } catch (err) {
+                    showStatus('Error: ' + err.message, 'error');
+                    loadingSpinner.style.display = 'none';
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function addFileToList(name, model) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <span>${name}</span>
+                <button onclick="removeModel(this)">Remove</button>
+            `;
+            fileList.appendChild(fileItem);
+        }
+
+        function removeModel(button) {
+            const index = Array.from(fileList.children).indexOf(button.parentElement);
+            if (loadedModels[index]) {
+                scene.remove(loadedModels[index]);
+                loadedModels.splice(index, 1);
+            }
+            button.parentElement.remove();
+        }
+
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        // UI Functions
         function toggleRotation() {
-            isRotating = !isRotating;
-            event.target.textContent = isRotating ? '⏸ Stop' : '▶ Rotate';
+            isAutoRotating = !isAutoRotating;
+            controls.autoRotate = isAutoRotating;
+            event.target.textContent = isAutoRotating ? '⏸ Stop Rotate' : '▶ Auto Rotate';
             event.target.classList.toggle('active');
         }
 
         function changeColor() {
             const colors = [0x667eea, 0x764ba2, 0xff6b6b, 0x4ecdc4, 0xffe66d, 0xff006e];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            mesh.material.color.setHex(randomColor);
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            loadedModels.forEach(model => {
+                model.traverse((child) => {
+                    if (child.isMesh && child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => mat.color.setHex(color));
+                        } else {
+                            child.material.color.setHex(color);
+                        }
+                    }
+                });
+            });
         }
 
         function toggleLight() {
@@ -313,34 +500,43 @@
             pointLight.intensity = pointLight.intensity > 0 ? 0 : 1;
         }
 
-        function resetScene() {
-            isRotating = true;
-            currentShape = 'cube';
-            createMesh();
-            camera.position.z = 5;
-            mesh.rotation.set(0, 0, 0);
-            mesh.material.color.setHex(0x667eea);
+        function resetView() {
+            if (loadedModels.length > 0) {
+                const bbox = new THREE.Box3().setFromObject(loadedModels[0]);
+                const center = bbox.getCenter(new THREE.Vector3());
+                const distance = bbox.getSize(new THREE.Vector3()).length();
+                camera.position.copy(center);
+                camera.position.z += distance;
+                controls.target.copy(center);
+                controls.update();
+            }
         }
 
-        // Animation Loop
-        function animate() {
-            requestAnimationFrame(animate);
+        function clearScene() {
+            loadedModels.forEach(model => scene.remove(model));
+            loadedModels = [];
+            fileList.innerHTML = '';
+            showStatus('Scene cleared', 'success');
+        }
 
-            if (isRotating && mesh) {
-                mesh.rotation.x += 0.005;
-                mesh.rotation.y += 0.008;
-            }
+        function toggleWireframe() {
+            const enabled = document.getElementById('wireframe').checked;
+            loadedModels.forEach(model => {
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material.wireframe = enabled;
+                    }
+                });
+            });
+        }
 
-            if (isDragging && mesh) {
-                mesh.rotation.y += mouse.x * 0.05;
-                mesh.rotation.x += mouse.y * 0.05;
-            }
+        function toggleShadows() {
+            const enabled = document.getElementById('shadows').checked;
+            renderer.shadowMap.enabled = enabled;
+        }
 
-            // Particles animation
-            particles.rotation.x += 0.0001;
-            particles.rotation.y += 0.0002;
-
-            renderer.render(scene, camera);
+        function downloadModel() {
+            showStatus('Export feature coming soon!', 'loading');
         }
 
         // Handle window resize
@@ -350,10 +546,12 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Remove loading screen
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-        }, 1500);
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
 
         animate();
     </script>
