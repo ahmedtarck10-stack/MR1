@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>MR1 - AR/VR/MR Experience</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
@@ -14,19 +16,98 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        body {
-            font-family: 'Arial', sans-serif;
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
             background: #000;
             color: #fff;
             overflow: hidden;
+            position: fixed;
         }
 
         #canvas {
             display: block;
             width: 100%;
-            height: 100vh;
+            height: 100%;
+        }
+
+        .permission-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .permission-dialog {
+            background: rgba(20, 20, 35, 0.98);
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+        }
+
+        .permission-dialog h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .permission-list {
+            text-align: left;
+            margin: 25px 0;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 12px 0;
+            font-size: 0.95em;
+            color: #aaa;
+        }
+
+        .permission-item.granted {
+            color: #4ecdc4;
+        }
+
+        .permission-icon {
+            font-size: 1.2em;
+            min-width: 20px;
+        }
+
+        .permission-dialog button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .permission-dialog button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
 
         .ui-panel {
@@ -41,6 +122,12 @@
             z-index: 100;
             max-height: 85vh;
             overflow-y: auto;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .ui-panel.active {
+            display: block;
         }
 
         .ui-panel h1 {
@@ -54,6 +141,35 @@
             margin-bottom: 15px;
             line-height: 1.5;
             font-size: 0.95em;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 0.85em;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .mode-btn:hover {
+            transform: scale(1.05);
         }
 
         .section {
@@ -196,6 +312,12 @@
             font-size: 0.85em;
             color: #aaa;
             max-width: 420px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+
+        .info-bottom.active {
+            display: block;
         }
 
         .info-bottom p {
@@ -204,6 +326,35 @@
 
         .info-bottom strong {
             color: #667eea;
+        }
+
+        .top-right {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .icon-btn {
+            width: 45px;
+            height: 45px;
+            background: rgba(102, 126, 234, 0.8);
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .icon-btn:hover {
+            background: #667eea;
+            transform: scale(1.1);
         }
 
         .loading-spinner {
@@ -246,13 +397,50 @@
                 max-width: 95vw;
                 font-size: 0.8em;
             }
+
+            .mode-selector {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="ui-panel">
+    <!-- Permission Overlay -->
+    <div class="permission-overlay" id="permissionOverlay">
+        <div class="permission-dialog">
+            <h2>🔐 Required Permissions</h2>
+            <p>MR1 needs access to:</p>
+            <div class="permission-list">
+                <div class="permission-item" id="cameraPerm">
+                    <span class="permission-icon">📷</span>
+                    <span>Camera Access</span>
+                </div>
+                <div class="permission-item" id="filePerm">
+                    <span class="permission-icon">📁</span>
+                    <span>File Access</span>
+                </div>
+                <div class="permission-item" id="storagePerm">
+                    <span class="permission-icon">💾</span>
+                    <span>Storage Access</span>
+                </div>
+            </div>
+            <button onclick="requestPermissions()">✓ Grant Permissions</button>
+        </div>
+    </div>
+
+    <!-- Main UI Panel -->
+    <div class="ui-panel" id="uiPanel">
         <h1>🎯 MR1</h1>
         <p>Interactive 3D AR/VR/MR Experience</p>
+
+        <div class="section">
+            <h3>🎬 Display Mode</h3>
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="switchMode('object')">📦 Object</button>
+                <button class="mode-btn" onclick="switchMode('ar')">📱 AR</button>
+                <button class="mode-btn" onclick="switchMode('mr')">🔀 MR</button>
+            </div>
+        </div>
 
         <div class="section">
             <h3>📁 Upload 3D Model</h3>
@@ -270,38 +458,34 @@
         </div>
 
         <div class="section">
-            <h3>🎮 Main Controls</h3>
+            <h3>🎮 Controls</h3>
             <div class="controls">
                 <button onclick="toggleRotation()">▶ Auto Rotate</button>
                 <button onclick="changeColor()">🎨 Color</button>
                 <button onclick="toggleLight()">💡 Light</button>
-                <button onclick="resetView()">↺ Reset View</button>
+                <button onclick="resetView()">↺ Reset</button>
             </div>
         </div>
 
         <div class="section">
-            <h3>🥽 AR/MR Mode</h3>
+            <h3>📸 Capture</h3>
             <div class="controls">
-                <button id="arButton" onclick="initAR()" style="grid-column: 1/-1;">📱 Start AR</button>
-                <button onclick="downloadModel()">⬇ Download</button>
+                <button onclick="captureScreenshot()">📷 Screenshot</button>
+                <button onclick="recordScreen()">🎥 Record</button>
+                <button onclick="shareModel()">📤 Share</button>
                 <button onclick="clearScene()">🗑️ Clear</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>⚙️ Settings</h3>
-            <div class="controls" style="gap: 5px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="wireframe" onchange="toggleWireframe()"> Wireframe
-                </label>
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                    <input type="checkbox" id="shadows" checked onchange="toggleShadows()"> Shadows
-                </label>
             </div>
         </div>
     </div>
 
-    <div class="info-bottom">
+    <!-- Top Right Actions -->
+    <div class="top-right" id="topRight">
+        <div class="icon-btn" onclick="togglePanel()" title="Toggle Panel">⚙️</div>
+        <div class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</div>
+    </div>
+
+    <!-- Info Panel -->
+    <div class="info-bottom" id="infoBottom">
         <p><strong>🖱️ Controls:</strong></p>
         <p>Left Click + Drag = Rotate</p>
         <p>Right Click + Drag = Pan</p>
@@ -309,97 +493,135 @@
     </div>
 
     <script>
-        // Scene Setup
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x1a1a2e);
-        scene.fog = new THREE.Fog(0x1a1a2e, 500, 2000);
+        // Global Variables
+        let scene, camera, renderer, controls;
+        let loadedModels = [];
+        let isAutoRotating = true;
+        let currentMode = 'object';
+        let permissionsGranted = { camera: false, file: false, storage: false };
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-        camera.position.z = 5;
+        // Initialize Three.js Scene
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+            scene.fog = new THREE.Fog(0x1a1a2e, 500, 2000);
 
-        const canvas = document.createElement('canvas');
-        canvas.id = 'canvas';
-        document.body.appendChild(canvas);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+            camera.position.z = 5;
 
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFShadowShadowMap;
-        renderer.xr.enabled = true;
+            const canvas = document.createElement('canvas');
+            canvas.id = 'canvas';
+            document.body.appendChild(canvas);
 
-        // Orbit Controls
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 4;
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.xr.enabled = true;
 
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 4;
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(10, 20, 10);
-        directionalLight.castShadow = true;
-        directionalLight.shadow.mapSize.width = 2048;
-        directionalLight.shadow.mapSize.height = 2048;
-        directionalLight.shadow.camera.far = 100;
-        scene.add(directionalLight);
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
 
-        const pointLight = new THREE.PointLight(0x667eea, 1, 100);
-        pointLight.position.set(-10, 10, 10);
-        pointLight.castShadow = true;
-        scene.add(pointLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            directionalLight.shadow.camera.far = 100;
+            scene.add(directionalLight);
 
-        // Ground plane
-        const groundGeometry = new THREE.PlaneGeometry(200, 200);
-        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a3e });
-        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-        ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -10;
-        ground.receiveShadow = true;
-        scene.add(ground);
+            const pointLight = new THREE.PointLight(0x667eea, 1, 100);
+            pointLight.position.set(-10, 10, 10);
+            pointLight.castShadow = true;
+            scene.add(pointLight);
 
-        // Loaders
+            // Ground
+            const groundGeometry = new THREE.PlaneGeometry(200, 200);
+            const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a3e });
+            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.y = -10;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            animate();
+        }
+
+        // Permission System
+        async function requestPermissions() {
+            try {
+                // Camera Permission
+                try {
+                    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    cameraStream.getTracks().forEach(track => track.stop());
+                    permissionsGranted.camera = true;
+                    document.getElementById('cameraPerm').classList.add('granted');
+                } catch (e) {
+                    console.log('Camera permission denied or unavailable');
+                }
+
+                // File Access Permission
+                permissionsGranted.file = true;
+                document.getElementById('filePerm').classList.add('granted');
+
+                // Storage Permission
+                if (navigator.storage && navigator.storage.persist) {
+                    const isPersisted = await navigator.storage.persist();
+                    permissionsGranted.storage = isPersisted;
+                    if (isPersisted) {
+                        document.getElementById('storagePerm').classList.add('granted');
+                    }
+                }
+
+                setTimeout(() => {
+                    document.getElementById('permissionOverlay').style.display = 'none';
+                    document.getElementById('uiPanel').classList.add('active');
+                    document.getElementById('infoBottom').classList.add('active');
+                    showStatus('✅ Permissions granted! Ready to go.', 'success');
+                }, 500);
+
+            } catch (err) {
+                console.error('Permission request error:', err);
+            }
+        }
+
+        // File Upload
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const status = document.getElementById('status');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const uploadArea = document.getElementById('uploadArea');
+
         const gltfLoader = new THREE.GLTFLoader();
         const dracoLoader = new THREE.DRACOLoader();
         dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
         gltfLoader.setDRACOLoader(dracoLoader);
 
-        let loadedModels = [];
-        let isAutoRotating = true;
-
-        // File Upload Handling
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const fileList = document.getElementById('fileList');
-        const status = document.getElementById('status');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-
-        // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             uploadArea.classList.add('active');
         });
 
         uploadArea.addEventListener('dragleave', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             uploadArea.classList.remove('active');
         });
 
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            e.stopPropagation();
             uploadArea.classList.remove('active');
             handleFiles(e.dataTransfer.files);
         });
 
         function handleFileSelect(event) {
-            const files = event.target.files;
-            handleFiles(files);
+            handleFiles(event.target.files);
         }
 
         function handleFiles(files) {
@@ -407,7 +629,7 @@
                 if (['glb', 'gltf', 'usdz'].some(ext => file.name.toLowerCase().endsWith('.' + ext))) {
                     loadModel(file);
                 } else {
-                    showStatus('❌ Invalid file: ' + file.name + '. Use GLB, GLTF, or USDZ', 'error');
+                    showStatus('❌ Invalid file: ' + file.name, 'error');
                 }
             }
         }
@@ -431,7 +653,6 @@
                             }
                         });
 
-                        // Center and scale model
                         const box = new THREE.Box3().setFromObject(model);
                         const center = box.getCenter(new THREE.Vector3());
                         const size = box.getSize(new THREE.Vector3());
@@ -444,11 +665,10 @@
                         scene.add(model);
                         loadedModels.push(model);
 
-                        addFileToList(file.name, model);
-                        showStatus('✅ ' + file.name + ' loaded successfully!', 'success');
+                        addFileToList(file.name);
+                        showStatus('✅ ' + file.name + ' loaded!', 'success');
                         loadingSpinner.style.display = 'none';
 
-                        // Auto fit camera
                         const bbox = new THREE.Box3().setFromObject(model);
                         const center2 = bbox.getCenter(new THREE.Vector3());
                         const distance = bbox.getSize(new THREE.Vector3()).length();
@@ -458,7 +678,7 @@
                         controls.update();
 
                     }, undefined, (error) => {
-                        showStatus('❌ Error loading model: ' + error.message, 'error');
+                        showStatus('❌ Error: ' + error.message, 'error');
                         loadingSpinner.style.display = 'none';
                     });
                 } catch (err) {
@@ -467,15 +687,10 @@
                 }
             };
 
-            reader.onerror = () => {
-                showStatus('❌ Failed to read file: ' + file.name, 'error');
-                loadingSpinner.style.display = 'none';
-            };
-
             reader.readAsArrayBuffer(file);
         }
 
-        function addFileToList(name, model) {
+        function addFileToList(name) {
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
             fileItem.innerHTML = `
@@ -492,7 +707,6 @@
                 loadedModels.splice(index, 1);
             }
             button.parentElement.remove();
-            showStatus('Model removed', 'success');
         }
 
         function showStatus(message, type) {
@@ -500,7 +714,15 @@
             status.className = 'status ' + type;
         }
 
-        // UI Functions
+        // Mode Switching
+        function switchMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            showStatus(`🎬 Switched to ${mode.toUpperCase()} mode`, 'success');
+        }
+
+        // Controls
         function toggleRotation() {
             isAutoRotating = !isAutoRotating;
             controls.autoRotate = isAutoRotating;
@@ -509,9 +731,8 @@
         }
 
         function changeColor() {
-            const colors = [0x667eea, 0x764ba2, 0xff6b6b, 0x4ecdc4, 0xffe66d, 0xff006e];
+            const colors = [0x667eea, 0x764ba2, 0xff6b6b, 0x4ecdc4, 0xffe66d];
             const color = colors[Math.floor(Math.random() * colors.length)];
-            
             loadedModels.forEach(model => {
                 model.traverse((child) => {
                     if (child.isMesh && child.material) {
@@ -527,8 +748,11 @@
         }
 
         function toggleLight() {
-            directionalLight.intensity = directionalLight.intensity > 0 ? 0 : 0.8;
-            pointLight.intensity = pointLight.intensity > 0 ? 0 : 1;
+            scene.children.forEach(light => {
+                if (light.isLight) {
+                    light.intensity = light.intensity > 0 ? 0 : 1;
+                }
+            });
             showStatus('💡 Light toggled', 'success');
         }
 
@@ -540,7 +764,6 @@
                 camera.position.copy(center);
                 camera.position.z += distance;
                 controls.target.copy(center);
-                controls.update();
                 showStatus('↺ View reset', 'success');
             } else {
                 showStatus('⚠️ No model loaded', 'error');
@@ -554,61 +777,49 @@
             showStatus('🗑️ Scene cleared', 'success');
         }
 
-        function toggleWireframe() {
-            const enabled = document.getElementById('wireframe').checked;
-            loadedModels.forEach(model => {
-                model.traverse((child) => {
-                    if (child.isMesh) {
-                        child.material.wireframe = enabled;
-                    }
-                });
+        // Capture & Export
+        function captureScreenshot() {
+            renderer.render(scene, camera);
+            renderer.domElement.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'MR1-screenshot-' + Date.now() + '.png';
+                a.click();
+                showStatus('📷 Screenshot saved!', 'success');
             });
         }
 
-        function toggleShadows() {
-            const enabled = document.getElementById('shadows').checked;
-            renderer.shadowMap.enabled = enabled;
+        function recordScreen() {
+            showStatus('🎥 Recording feature coming soon!', 'loading');
         }
 
-        function downloadModel() {
-            showStatus('💾 Export feature coming soon!', 'loading');
-        }
-
-        // AR/MR Function
-        async function initAR() {
-            if (loadedModels.length === 0) {
-                showStatus('⚠️ Please load a model first!', 'error');
-                return;
+        function shareModel() {
+            if (navigator.share && loadedModels.length > 0) {
+                navigator.share({
+                    title: 'MR1 Model',
+                    text: 'Check out this awesome 3D model!',
+                    url: window.location.href
+                }).catch(err => console.log('Share error:', err));
+            } else {
+                showStatus('📤 Sharing not supported on this device', 'error');
             }
+        }
 
-            try {
-                if (navigator.xr) {
-                    const supported = await navigator.xr.isSessionSupported('immersive-ar');
-                    if (supported) {
-                        const session = await navigator.xr.requestSession('immersive-ar', {
-                            requiredFeatures: ['hit-test'],
-                            optionalFeatures: ['dom-overlay'],
-                            domOverlay: { root: document.body }
-                        });
-                        renderer.xr.setSession(session);
-                        showStatus('📱 AR Mode activated!', 'success');
-                    } else {
-                        showStatus('⚠️ AR not supported on this device', 'error');
-                    }
-                } else {
-                    showStatus('⚠️ WebXR not supported. Use Chrome on Android', 'error');
+        // UI Actions
+        function togglePanel() {
+            document.getElementById('uiPanel').classList.toggle('active');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => console.log(err));
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
                 }
-            } catch (err) {
-                showStatus('❌ AR Error: ' + err.message, 'error');
             }
         }
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
 
         // Animation Loop
         function animate() {
@@ -617,10 +828,17 @@
             renderer.render(scene, camera);
         }
 
-        animate();
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
 
-        // Initial status
-        showStatus('👋 Welcome! Upload a GLB, GLTF, or USDZ file to start', 'loading');
+        // Startup
+        window.addEventListener('load', () => {
+            initScene();
+        });
     </script>
 </body>
 </html>
