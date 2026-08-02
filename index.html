@@ -10,14 +10,11 @@
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/DRACOLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/webxr/XRButton.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
         html, body {
@@ -27,7 +24,6 @@
             background: #000;
             color: #fff;
             overflow: hidden;
-            position: fixed;
         }
 
         #canvas {
@@ -36,183 +32,60 @@
             height: 100%;
         }
 
-        .permission-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            backdrop-filter: blur(5px);
-        }
-
-        .permission-dialog {
-            background: rgba(20, 20, 35, 0.98);
-            border: 2px solid #667eea;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
-        }
-
-        .permission-dialog h2 {
-            color: #667eea;
-            font-size: 1.8em;
-            margin-bottom: 20px;
-        }
-
-        .permission-list {
-            text-align: left;
-            margin: 25px 0;
-            background: rgba(102, 126, 234, 0.1);
-            padding: 20px;
-            border-radius: 10px;
-        }
-
-        .permission-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 12px 0;
-            font-size: 0.95em;
-            color: #aaa;
-        }
-
-        .permission-item.granted {
-            color: #4ecdc4;
-        }
-
-        .permission-icon {
-            font-size: 1.2em;
-            min-width: 20px;
-        }
-
-        .permission-dialog button {
-            margin-top: 20px;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-
-        .permission-dialog button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-
         .ui-panel {
             position: absolute;
             top: 20px;
             left: 20px;
             background: rgba(0, 0, 0, 0.95);
-            padding: 25px;
+            padding: 20px;
             border-radius: 15px;
             border: 2px solid #667eea;
-            max-width: 420px;
+            max-width: 400px;
             z-index: 100;
             max-height: 85vh;
             overflow-y: auto;
             backdrop-filter: blur(10px);
-            display: none;
-        }
-
-        .ui-panel.active {
-            display: block;
         }
 
         .ui-panel h1 {
             color: #667eea;
             margin-bottom: 10px;
-            font-size: 1.8em;
-        }
-
-        .ui-panel p {
-            color: #aaa;
-            margin-bottom: 15px;
-            line-height: 1.5;
-            font-size: 0.95em;
-        }
-
-        .mode-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .mode-btn {
-            padding: 10px;
-            background: rgba(102, 126, 234, 0.2);
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 0.85em;
-        }
-
-        .mode-btn.active {
-            background: #667eea;
-            color: white;
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
-        }
-
-        .mode-btn:hover {
-            transform: scale(1.05);
+            font-size: 1.6em;
         }
 
         .section {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #444;
         }
 
         .section h3 {
             color: #764ba2;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-
-        .upload-area {
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 25px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: rgba(102, 126, 234, 0.1);
-        }
-
-        .upload-area:hover {
-            border-color: #764ba2;
-            background: rgba(118, 75, 162, 0.2);
-            transform: scale(1.02);
-        }
-
-        .upload-area.active {
-            border-color: #4ecdc4;
-            background: rgba(78, 205, 196, 0.2);
-        }
-
-        .upload-text {
-            font-size: 1.1em;
             margin-bottom: 8px;
+            font-size: 0.95em;
         }
 
-        .upload-hint {
-            font-size: 0.85em;
-            color: #999;
+        .upload-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .upload-btn:active {
+            transform: scale(0.95);
+        }
+
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
         }
 
         #fileInput {
@@ -220,75 +93,72 @@
         }
 
         .file-list {
-            max-height: 150px;
+            max-height: 120px;
             overflow-y: auto;
-            margin-top: 10px;
-            padding: 10px;
+            margin-top: 8px;
+            padding: 8px;
             background: rgba(102, 126, 234, 0.1);
             border-radius: 8px;
         }
 
         .file-item {
-            padding: 8px;
+            padding: 6px;
             background: rgba(0, 0, 0, 0.5);
-            margin: 5px 0;
+            margin: 4px 0;
             border-radius: 5px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .file-item button {
-            padding: 4px 8px;
-            font-size: 0.8em;
+            padding: 3px 8px;
+            font-size: 0.75em;
             background: #ff6b6b;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
         }
 
         .controls {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
         }
 
         button {
-            padding: 10px 15px;
+            padding: 8px 12px;
             background: #667eea;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 0.9em;
+            transition: all 0.2s ease;
+            font-size: 0.85em;
+        }
+
+        button:active {
+            transform: scale(0.95);
         }
 
         button:hover {
             background: #764ba2;
-            transform: scale(1.05);
-        }
-
-        button:disabled {
-            background: #444;
-            cursor: not-allowed;
-            opacity: 0.5;
-        }
-
-        button.active {
-            background: #764ba2;
         }
 
         .status {
-            padding: 10px;
+            padding: 8px;
             background: rgba(102, 126, 234, 0.2);
             border-radius: 5px;
-            margin-top: 10px;
-            font-size: 0.9em;
+            margin-top: 8px;
+            font-size: 0.85em;
             color: #aaa;
-        }
-
-        .status.loading {
-            color: #667eea;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
         }
 
         .status.success {
@@ -306,26 +176,17 @@
             bottom: 20px;
             left: 20px;
             background: rgba(0, 0, 0, 0.95);
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             border: 2px solid #667eea;
-            font-size: 0.85em;
+            font-size: 0.8em;
             color: #aaa;
-            max-width: 420px;
+            max-width: 400px;
             backdrop-filter: blur(10px);
-            display: none;
-        }
-
-        .info-bottom.active {
-            display: block;
         }
 
         .info-bottom p {
-            margin: 5px 0;
-        }
-
-        .info-bottom strong {
-            color: #667eea;
+            margin: 3px 0;
         }
 
         .top-right {
@@ -348,39 +209,21 @@
             justify-content: center;
             align-items: center;
             font-size: 1.2em;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             backdrop-filter: blur(10px);
+        }
+
+        .icon-btn:active {
+            transform: scale(0.9);
         }
 
         .icon-btn:hover {
             background: #667eea;
-            transform: scale(1.1);
-        }
-
-        .loading-spinner {
-            display: none;
-            text-align: center;
-            padding: 10px;
-        }
-
-        .spinner {
-            border: 3px solid #667eea;
-            border-top: 3px solid #764ba2;
-            border-radius: 50%;
-            width: 25px;
-            height: 25px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
             .ui-panel {
-                max-width: 95vw;
+                max-width: 90vw;
                 padding: 15px;
                 font-size: 0.9em;
             }
@@ -389,122 +232,57 @@
                 grid-template-columns: 1fr;
             }
 
-            button {
-                padding: 8px 12px;
-            }
-
             .info-bottom {
-                max-width: 95vw;
-                font-size: 0.8em;
-            }
-
-            .mode-selector {
-                grid-template-columns: 1fr;
+                max-width: 90vw;
+                font-size: 0.75em;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Permission Overlay -->
-    <div class="permission-overlay" id="permissionOverlay">
-        <div class="permission-dialog">
-            <h2>🔐 Required Permissions</h2>
-            <p>MR1 needs access to:</p>
-            <div class="permission-list">
-                <div class="permission-item" id="cameraPerm">
-                    <span class="permission-icon">📷</span>
-                    <span>Camera Access</span>
-                </div>
-                <div class="permission-item" id="filePerm">
-                    <span class="permission-icon">📁</span>
-                    <span>File Access</span>
-                </div>
-                <div class="permission-item" id="storagePerm">
-                    <span class="permission-icon">💾</span>
-                    <span>Storage Access</span>
-                </div>
-            </div>
-            <button onclick="requestPermissions()">✓ Grant Permissions</button>
-        </div>
-    </div>
-
-    <!-- Main UI Panel -->
-    <div class="ui-panel" id="uiPanel">
+    <div class="ui-panel">
         <h1>🎯 MR1</h1>
-        <p>Interactive 3D AR/VR/MR Experience</p>
 
         <div class="section">
-            <h3>🎬 Display Mode</h3>
-            <div class="mode-selector">
-                <button class="mode-btn active" onclick="switchMode('object')">📦 Object</button>
-                <button class="mode-btn" onclick="switchMode('ar')">📱 AR</button>
-                <button class="mode-btn" onclick="switchMode('mr')">🔀 MR</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>📁 Upload 3D Model</h3>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click();">
-                <div class="upload-text">📤 Click or Drag & Drop</div>
-                <div class="upload-hint">Supported: GLB, GLTF, USDZ (Max 50MB)</div>
-            </div>
-            <input type="file" id="fileInput" accept=".glb,.gltf,.usdz" multiple onchange="handleFileSelect(event)">
+            <h3>📁 Load 3D Model</h3>
+            <button class="upload-btn" id="uploadBtn">📤 Choose File (GLB/GLTF/USDZ)</button>
+            <input type="file" id="fileInput" accept=".glb,.gltf,.usdz">
             <div class="file-list" id="fileList"></div>
-            <div class="status" id="status"></div>
-            <div class="loading-spinner" id="loadingSpinner">
-                <div class="spinner"></div>
-                <p>Loading model...</p>
-            </div>
+            <div class="status" id="status">Ready to load model</div>
         </div>
 
         <div class="section">
             <h3>🎮 Controls</h3>
             <div class="controls">
-                <button onclick="toggleRotation()">▶ Auto Rotate</button>
+                <button onclick="toggleRotation()">▶ Rotate</button>
                 <button onclick="changeColor()">🎨 Color</button>
                 <button onclick="toggleLight()">💡 Light</button>
                 <button onclick="resetView()">↺ Reset</button>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>📸 Capture</h3>
-            <div class="controls">
                 <button onclick="captureScreenshot()">📷 Screenshot</button>
-                <button onclick="recordScreen()">🎥 Record</button>
-                <button onclick="shareModel()">📤 Share</button>
                 <button onclick="clearScene()">🗑️ Clear</button>
             </div>
         </div>
     </div>
 
-    <!-- Top Right Actions -->
-    <div class="top-right" id="topRight">
-        <div class="icon-btn" onclick="togglePanel()" title="Toggle Panel">⚙️</div>
+    <div class="top-right">
+        <div class="icon-btn" onclick="togglePanel()" title="Toggle">⚙️</div>
         <div class="icon-btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</div>
     </div>
 
-    <!-- Info Panel -->
-    <div class="info-bottom" id="infoBottom">
-        <p><strong>🖱️ Controls:</strong></p>
-        <p>Left Click + Drag = Rotate</p>
-        <p>Right Click + Drag = Pan</p>
-        <p>Scroll = Zoom</p>
+    <div class="info-bottom">
+        <p><strong>Controls:</strong></p>
+        <p>Drag = Rotate | Scroll = Zoom</p>
     </div>
 
     <script>
-        // Global Variables
+        // Scene Setup
         let scene, camera, renderer, controls;
         let loadedModels = [];
         let isAutoRotating = true;
-        let currentMode = 'object';
-        let permissionsGranted = { camera: false, file: false, storage: false };
 
-        // Initialize Three.js Scene
         function initScene() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a2e);
-            scene.fog = new THREE.Fog(0x1a1a2e, 500, 2000);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
             camera.position.z = 5;
@@ -517,7 +295,6 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.shadowMap.enabled = true;
-            renderer.xr.enabled = true;
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
@@ -532,14 +309,10 @@
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(10, 20, 10);
             directionalLight.castShadow = true;
-            directionalLight.shadow.mapSize.width = 2048;
-            directionalLight.shadow.mapSize.height = 2048;
-            directionalLight.shadow.camera.far = 100;
             scene.add(directionalLight);
 
             const pointLight = new THREE.PointLight(0x667eea, 1, 100);
             pointLight.position.set(-10, 10, 10);
-            pointLight.castShadow = true;
             scene.add(pointLight);
 
             // Ground
@@ -548,104 +321,62 @@
             const ground = new THREE.Mesh(groundGeometry, groundMaterial);
             ground.rotation.x = -Math.PI / 2;
             ground.position.y = -10;
-            ground.receiveShadow = true;
             scene.add(ground);
 
             animate();
         }
 
-        // Permission System
-        async function requestPermissions() {
-            try {
-                // Camera Permission
-                try {
-                    const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    cameraStream.getTracks().forEach(track => track.stop());
-                    permissionsGranted.camera = true;
-                    document.getElementById('cameraPerm').classList.add('granted');
-                } catch (e) {
-                    console.log('Camera permission denied or unavailable');
-                }
-
-                // File Access Permission
-                permissionsGranted.file = true;
-                document.getElementById('filePerm').classList.add('granted');
-
-                // Storage Permission
-                if (navigator.storage && navigator.storage.persist) {
-                    const isPersisted = await navigator.storage.persist();
-                    permissionsGranted.storage = isPersisted;
-                    if (isPersisted) {
-                        document.getElementById('storagePerm').classList.add('granted');
-                    }
-                }
-
-                setTimeout(() => {
-                    document.getElementById('permissionOverlay').style.display = 'none';
-                    document.getElementById('uiPanel').classList.add('active');
-                    document.getElementById('infoBottom').classList.add('active');
-                    showStatus('✅ Permissions granted! Ready to go.', 'success');
-                }, 500);
-
-            } catch (err) {
-                console.error('Permission request error:', err);
-            }
-        }
-
-        // File Upload
+        // File Input Handler
         const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
         const fileList = document.getElementById('fileList');
         const status = document.getElementById('status');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const uploadArea = document.getElementById('uploadArea');
+
+        uploadBtn.addEventListener('click', () => {
+            console.log('Upload button clicked');
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            console.log('File selected:', e.target.files);
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (!files || files.length === 0) {
+                showStatus('No file selected', 'error');
+                return;
+            }
+
+            for (let file of files) {
+                console.log('Processing file:', file.name, file.type);
+                if (['glb', 'gltf', 'usdz'].some(ext => file.name.toLowerCase().endsWith('.' + ext))) {
+                    loadModel(file);
+                } else {
+                    showStatus('❌ Invalid: ' + file.name, 'error');
+                }
+            }
+        }
 
         const gltfLoader = new THREE.GLTFLoader();
         const dracoLoader = new THREE.DRACOLoader();
         dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
         gltfLoader.setDRACOLoader(dracoLoader);
 
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('active');
-        });
-
-        uploadArea.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('active');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('active');
-            handleFiles(e.dataTransfer.files);
-        });
-
-        function handleFileSelect(event) {
-            handleFiles(event.target.files);
-        }
-
-        function handleFiles(files) {
-            for (let file of files) {
-                if (['glb', 'gltf', 'usdz'].some(ext => file.name.toLowerCase().endsWith('.' + ext))) {
-                    loadModel(file);
-                } else {
-                    showStatus('❌ Invalid file: ' + file.name, 'error');
-                }
-            }
-        }
-
         function loadModel(file) {
             const reader = new FileReader();
             
             reader.onload = (e) => {
-                loadingSpinner.style.display = 'block';
-                showStatus('⏳ Loading ' + file.name + '...', 'loading');
+                showStatus('⏳ Loading ' + file.name, 'loading');
+                console.log('File loaded, parsing...');
 
                 try {
                     const url = URL.createObjectURL(new Blob([e.target.result], { type: file.type }));
                     
                     gltfLoader.load(url, (gltf) => {
+                        console.log('Model loaded successfully');
                         const model = gltf.scene;
+                        
                         model.traverse((node) => {
                             if (node.isMesh) {
                                 node.castShadow = true;
@@ -666,8 +397,7 @@
                         loadedModels.push(model);
 
                         addFileToList(file.name);
-                        showStatus('✅ ' + file.name + ' loaded!', 'success');
-                        loadingSpinner.style.display = 'none';
+                        showStatus('✅ Loaded: ' + file.name, 'success');
 
                         const bbox = new THREE.Box3().setFromObject(model);
                         const center2 = bbox.getCenter(new THREE.Vector3());
@@ -678,13 +408,18 @@
                         controls.update();
 
                     }, undefined, (error) => {
-                        showStatus('❌ Error: ' + error.message, 'error');
-                        loadingSpinner.style.display = 'none';
+                        console.error('Loading error:', error);
+                        showStatus('❌ Load error: ' + error.message.substring(0, 30), 'error');
                     });
                 } catch (err) {
-                    showStatus('❌ Error: ' + err.message, 'error');
-                    loadingSpinner.style.display = 'none';
+                    console.error('Error:', err);
+                    showStatus('❌ Error: ' + err.message.substring(0, 30), 'error');
                 }
+            };
+
+            reader.onerror = (err) => {
+                console.error('Reader error:', err);
+                showStatus('❌ File read failed', 'error');
             };
 
             reader.readAsArrayBuffer(file);
@@ -711,23 +446,13 @@
 
         function showStatus(message, type) {
             status.textContent = message;
-            status.className = 'status ' + type;
-        }
-
-        // Mode Switching
-        function switchMode(mode) {
-            currentMode = mode;
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-            showStatus(`🎬 Switched to ${mode.toUpperCase()} mode`, 'success');
+            status.className = 'status ' + (type || '');
         }
 
         // Controls
         function toggleRotation() {
             isAutoRotating = !isAutoRotating;
             controls.autoRotate = isAutoRotating;
-            event.target.textContent = isAutoRotating ? '⏸ Stop' : '▶ Rotate';
-            event.target.classList.toggle('active');
         }
 
         function changeColor() {
@@ -764,9 +489,6 @@
                 camera.position.copy(center);
                 camera.position.z += distance;
                 controls.target.copy(center);
-                showStatus('↺ View reset', 'success');
-            } else {
-                showStatus('⚠️ No model loaded', 'error');
             }
         }
 
@@ -774,71 +496,47 @@
             loadedModels.forEach(model => scene.remove(model));
             loadedModels = [];
             fileList.innerHTML = '';
-            showStatus('🗑️ Scene cleared', 'success');
+            showStatus('Scene cleared', 'success');
         }
 
-        // Capture & Export
         function captureScreenshot() {
             renderer.render(scene, camera);
             renderer.domElement.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'MR1-screenshot-' + Date.now() + '.png';
+                a.download = 'MR1-' + Date.now() + '.png';
                 a.click();
                 showStatus('📷 Screenshot saved!', 'success');
             });
         }
 
-        function recordScreen() {
-            showStatus('🎥 Recording feature coming soon!', 'loading');
-        }
-
-        function shareModel() {
-            if (navigator.share && loadedModels.length > 0) {
-                navigator.share({
-                    title: 'MR1 Model',
-                    text: 'Check out this awesome 3D model!',
-                    url: window.location.href
-                }).catch(err => console.log('Share error:', err));
-            } else {
-                showStatus('📤 Sharing not supported on this device', 'error');
-            }
-        }
-
-        // UI Actions
         function togglePanel() {
-            document.getElementById('uiPanel').classList.toggle('active');
+            const panel = document.querySelector('.ui-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
         }
 
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(err => console.log(err));
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
+                document.exitFullscreen();
             }
         }
 
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
             renderer.render(scene, camera);
         }
 
-        // Resize Handler
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Startup
-        window.addEventListener('load', () => {
-            initScene();
-        });
+        initScene();
     </script>
 </body>
 </html>
