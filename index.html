@@ -8,6 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/loaders/DRACOLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/webxr/XRButton.js"></script>
     <style>
         * {
             margin: 0;
@@ -32,7 +33,7 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             padding: 25px;
             border-radius: 15px;
             border: 2px solid #667eea;
@@ -70,7 +71,7 @@
         .upload-area {
             border: 2px dashed #667eea;
             border-radius: 10px;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -80,11 +81,22 @@
         .upload-area:hover {
             border-color: #764ba2;
             background: rgba(118, 75, 162, 0.2);
+            transform: scale(1.02);
         }
 
         .upload-area.active {
             border-color: #4ecdc4;
             background: rgba(78, 205, 196, 0.2);
+        }
+
+        .upload-text {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 0.85em;
+            color: #999;
         }
 
         #fileInput {
@@ -177,7 +189,7 @@
             position: absolute;
             bottom: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             padding: 15px;
             border-radius: 10px;
             border: 2px solid #667eea;
@@ -244,11 +256,11 @@
 
         <div class="section">
             <h3>📁 Upload 3D Model</h3>
-            <div class="upload-area" id="uploadArea">
-                <p>📤 Drag & Drop or Click to Upload</p>
-                <p style="font-size: 0.85em; color: #999;">Supported: GLB, GLTF, USDZ (Max 50MB)</p>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click();">
+                <div class="upload-text">📤 Click or Drag & Drop</div>
+                <div class="upload-hint">Supported: GLB, GLTF, USDZ (Max 50MB)</div>
             </div>
-            <input type="file" id="fileInput" accept=".glb,.gltf,.usdz" multiple>
+            <input type="file" id="fileInput" accept=".glb,.gltf,.usdz" multiple onchange="handleFileSelect(event)">
             <div class="file-list" id="fileList"></div>
             <div class="status" id="status"></div>
             <div class="loading-spinner" id="loadingSpinner">
@@ -258,12 +270,19 @@
         </div>
 
         <div class="section">
-            <h3>🎮 Controls</h3>
+            <h3>🎮 Main Controls</h3>
             <div class="controls">
                 <button onclick="toggleRotation()">▶ Auto Rotate</button>
                 <button onclick="changeColor()">🎨 Color</button>
                 <button onclick="toggleLight()">💡 Light</button>
                 <button onclick="resetView()">↺ Reset View</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🥽 AR/MR Mode</h3>
+            <div class="controls">
+                <button id="arButton" onclick="initAR()" style="grid-column: 1/-1;">📱 Start AR</button>
                 <button onclick="downloadModel()">⬇ Download</button>
                 <button onclick="clearScene()">🗑️ Clear</button>
             </div>
@@ -307,6 +326,7 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+        renderer.xr.enabled = true;
 
         // Orbit Controls
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -357,33 +377,37 @@
         const status = document.getElementById('status');
         const loadingSpinner = document.getElementById('loadingSpinner');
 
-        uploadArea.addEventListener('click', () => fileInput.click());
-
+        // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             uploadArea.classList.add('active');
         });
 
-        uploadArea.addEventListener('dragleave', () => {
+        uploadArea.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             uploadArea.classList.remove('active');
         });
 
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             uploadArea.classList.remove('active');
             handleFiles(e.dataTransfer.files);
         });
 
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            handleFiles(files);
+        }
 
         function handleFiles(files) {
             for (let file of files) {
-                if (['glb', 'gltf', 'usdz'].some(ext => file.name.endsWith('.' + ext))) {
+                if (['glb', 'gltf', 'usdz'].some(ext => file.name.toLowerCase().endsWith('.' + ext))) {
                     loadModel(file);
                 } else {
-                    showStatus('Invalid file format. Use GLB, GLTF, or USDZ', 'error');
+                    showStatus('❌ Invalid file: ' + file.name + '. Use GLB, GLTF, or USDZ', 'error');
                 }
             }
         }
@@ -393,7 +417,7 @@
             
             reader.onload = (e) => {
                 loadingSpinner.style.display = 'block';
-                showStatus('Loading ' + file.name + '...', 'loading');
+                showStatus('⏳ Loading ' + file.name + '...', 'loading');
 
                 try {
                     const url = URL.createObjectURL(new Blob([e.target.result], { type: file.type }));
@@ -421,7 +445,7 @@
                         loadedModels.push(model);
 
                         addFileToList(file.name, model);
-                        showStatus('✓ ' + file.name + ' loaded successfully!', 'success');
+                        showStatus('✅ ' + file.name + ' loaded successfully!', 'success');
                         loadingSpinner.style.display = 'none';
 
                         // Auto fit camera
@@ -434,13 +458,18 @@
                         controls.update();
 
                     }, undefined, (error) => {
-                        showStatus('Error loading model: ' + error.message, 'error');
+                        showStatus('❌ Error loading model: ' + error.message, 'error');
                         loadingSpinner.style.display = 'none';
                     });
                 } catch (err) {
-                    showStatus('Error: ' + err.message, 'error');
+                    showStatus('❌ Error: ' + err.message, 'error');
                     loadingSpinner.style.display = 'none';
                 }
+            };
+
+            reader.onerror = () => {
+                showStatus('❌ Failed to read file: ' + file.name, 'error');
+                loadingSpinner.style.display = 'none';
             };
 
             reader.readAsArrayBuffer(file);
@@ -450,8 +479,8 @@
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
             fileItem.innerHTML = `
-                <span>${name}</span>
-                <button onclick="removeModel(this)">Remove</button>
+                <span>📦 ${name}</span>
+                <button onclick="removeModel(this)">✕</button>
             `;
             fileList.appendChild(fileItem);
         }
@@ -463,6 +492,7 @@
                 loadedModels.splice(index, 1);
             }
             button.parentElement.remove();
+            showStatus('Model removed', 'success');
         }
 
         function showStatus(message, type) {
@@ -474,7 +504,7 @@
         function toggleRotation() {
             isAutoRotating = !isAutoRotating;
             controls.autoRotate = isAutoRotating;
-            event.target.textContent = isAutoRotating ? '⏸ Stop Rotate' : '▶ Auto Rotate';
+            event.target.textContent = isAutoRotating ? '⏸ Stop' : '▶ Rotate';
             event.target.classList.toggle('active');
         }
 
@@ -493,11 +523,13 @@
                     }
                 });
             });
+            showStatus('🎨 Color changed!', 'success');
         }
 
         function toggleLight() {
             directionalLight.intensity = directionalLight.intensity > 0 ? 0 : 0.8;
             pointLight.intensity = pointLight.intensity > 0 ? 0 : 1;
+            showStatus('💡 Light toggled', 'success');
         }
 
         function resetView() {
@@ -509,6 +541,9 @@
                 camera.position.z += distance;
                 controls.target.copy(center);
                 controls.update();
+                showStatus('↺ View reset', 'success');
+            } else {
+                showStatus('⚠️ No model loaded', 'error');
             }
         }
 
@@ -516,7 +551,7 @@
             loadedModels.forEach(model => scene.remove(model));
             loadedModels = [];
             fileList.innerHTML = '';
-            showStatus('Scene cleared', 'success');
+            showStatus('🗑️ Scene cleared', 'success');
         }
 
         function toggleWireframe() {
@@ -536,7 +571,36 @@
         }
 
         function downloadModel() {
-            showStatus('Export feature coming soon!', 'loading');
+            showStatus('💾 Export feature coming soon!', 'loading');
+        }
+
+        // AR/MR Function
+        async function initAR() {
+            if (loadedModels.length === 0) {
+                showStatus('⚠️ Please load a model first!', 'error');
+                return;
+            }
+
+            try {
+                if (navigator.xr) {
+                    const supported = await navigator.xr.isSessionSupported('immersive-ar');
+                    if (supported) {
+                        const session = await navigator.xr.requestSession('immersive-ar', {
+                            requiredFeatures: ['hit-test'],
+                            optionalFeatures: ['dom-overlay'],
+                            domOverlay: { root: document.body }
+                        });
+                        renderer.xr.setSession(session);
+                        showStatus('📱 AR Mode activated!', 'success');
+                    } else {
+                        showStatus('⚠️ AR not supported on this device', 'error');
+                    }
+                } else {
+                    showStatus('⚠️ WebXR not supported. Use Chrome on Android', 'error');
+                }
+            } catch (err) {
+                showStatus('❌ AR Error: ' + err.message, 'error');
+            }
         }
 
         // Handle window resize
@@ -554,6 +618,9 @@
         }
 
         animate();
+
+        // Initial status
+        showStatus('👋 Welcome! Upload a GLB, GLTF, or USDZ file to start', 'loading');
     </script>
 </body>
 </html>
